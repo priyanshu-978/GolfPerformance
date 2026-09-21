@@ -1,0 +1,669 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: public
+    description: Public discovery content
+  - name: subscriber
+    description: Subscriber dashboard operations
+  - name: admin
+    description: Administrator operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /overview:
+    get:
+      operationId: getPublicOverview
+      tags: [public]
+      summary: Get public homepage data
+      responses:
+        "200":
+          description: Public homepage overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicOverview"
+  /charities:
+    get:
+      operationId: listCharities
+      tags: [public]
+      summary: List active charities
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: featured
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Active charities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Charity"
+  /charities/{slug}:
+    get:
+      operationId: getCharity
+      tags: [public]
+      summary: Get a charity and its events
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Charity detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharityDetail"
+        "404":
+          description: Charity not found
+  /me/dashboard:
+    get:
+      operationId: getSubscriberDashboard
+      tags: [subscriber]
+      summary: Get the current subscriber dashboard
+      responses:
+        "200":
+          description: Subscriber dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriberDashboard"
+  /me/scores:
+    get:
+      operationId: listMyScores
+      tags: [subscriber]
+      summary: List the current subscriber's latest five scores
+      responses:
+        "200":
+          description: Recent scores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Score"
+    post:
+      operationId: createMyScore
+      tags: [subscriber]
+      summary: Add a Stableford score
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScoreInput"
+      responses:
+        "201":
+          description: Created score
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Score"
+        "400":
+          description: Invalid or duplicate score
+  /me/scores/{id}:
+    patch:
+      operationId: updateMyScore
+      tags: [subscriber]
+      summary: Edit a Stableford score
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScoreInput"
+      responses:
+        "200":
+          description: Updated score
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Score"
+        "404":
+          description: Score not found
+    delete:
+      operationId: deleteMyScore
+      tags: [subscriber]
+      summary: Delete a Stableford score
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Score deleted
+  /me/charity:
+    get:
+      operationId: getMyCharityPreference
+      tags: [subscriber]
+      summary: Get current charity preference
+      responses:
+        "200":
+          description: Charity preference
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharityPreference"
+    put:
+      operationId: updateMyCharityPreference
+      tags: [subscriber]
+      summary: Update charity preference
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CharityPreferenceInput"
+      responses:
+        "200":
+          description: Updated charity preference
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharityPreference"
+        "400":
+          description: Invalid contribution percentage
+  /me/draws:
+    get:
+      operationId: listMyDraws
+      tags: [subscriber]
+      summary: List upcoming and previous draws
+      responses:
+        "200":
+          description: Draw participation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DrawSummary"
+  /me/winners:
+    get:
+      operationId: listMyWinners
+      tags: [subscriber]
+      summary: List current subscriber winnings
+      responses:
+        "200":
+          description: Winnings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Winner"
+  /me/winners/{id}/proof:
+    post:
+      operationId: submitWinnerProof
+      tags: [subscriber]
+      summary: Submit winner proof
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProofInput"
+      responses:
+        "200":
+          description: Updated winner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Winner"
+  /admin/overview:
+    get:
+      operationId: getAdminOverview
+      tags: [admin]
+      summary: Get admin metrics
+      responses:
+        "200":
+          description: Admin dashboard metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOverview"
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: List subscriber users
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+      responses:
+        "200":
+          description: Subscriber users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+  /admin/draws:
+    get:
+      operationId: listAdminDraws
+      tags: [admin]
+      summary: List draw history
+      responses:
+        "200":
+          description: Draw history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminDraw"
+    post:
+      operationId: simulateDraw
+      tags: [admin]
+      summary: Run a draw simulation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DrawSimulationInput"
+      responses:
+        "200":
+          description: Simulation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimulationResult"
+  /admin/draws/{id}/publish:
+    post:
+      operationId: publishDraw
+      tags: [admin]
+      summary: Publish a simulated draw
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Published draw
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDraw"
+  /admin/charities:
+    post:
+      operationId: createCharity
+      tags: [admin]
+      summary: Create a charity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CharityInput"
+      responses:
+        "201":
+          description: Created charity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Charity"
+  /admin/winners:
+    get:
+      operationId: listAdminWinners
+      tags: [admin]
+      summary: List winners requiring operations
+      responses:
+        "200":
+          description: Winner queue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminWinner"
+  /admin/winners/{id}/verification:
+    patch:
+      operationId: updateWinnerVerification
+      tags: [admin]
+      summary: Approve or reject winner proof
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerificationInput"
+      responses:
+        "200":
+          description: Updated winner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminWinner"
+  /admin/winners/{id}/payout:
+    post:
+      operationId: markWinnerPaid
+      tags: [admin]
+      summary: Mark an approved winner as paid
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Updated winner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminWinner"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Subscription:
+      type: object
+      required: [status, plan, renewal_date]
+      properties:
+        status: { type: string }
+        plan: { type: string }
+        renewal_date: { type: string }
+        amount: { type: number }
+        interval: { type: string }
+    Charity:
+      type: object
+      required: [id, name, slug, short_description, featured, active, impact_stat]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        short_description: { type: string }
+        full_description: { type: string }
+        logo_url: { type: ["string", "null"] }
+        cover_image_url: { type: ["string", "null"] }
+        website_url: { type: ["string", "null"] }
+        featured: { type: boolean }
+        active: { type: boolean }
+        impact_stat: { type: string }
+        focus: { type: string }
+    CharityEvent:
+      type: object
+      required: [id, title, event_date, location]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        event_date: { type: string }
+        location: { type: string }
+        image_url: { type: ["string", "null"] }
+    CharityDetail:
+      allOf:
+        - $ref: "#/components/schemas/Charity"
+        - type: object
+          required: [events]
+          properties:
+            events:
+              type: array
+              items: { $ref: "#/components/schemas/CharityEvent" }
+    PublicOverview:
+      type: object
+      required: [active_subscribers, prize_pool, charity_total, featured_charity, plans, recent_impact]
+      properties:
+        active_subscribers: { type: integer }
+        prize_pool: { type: number }
+        charity_total: { type: number }
+        featured_charity: { $ref: "#/components/schemas/Charity" }
+        plans:
+          type: array
+          items: { $ref: "#/components/schemas/Plan" }
+        recent_impact:
+          type: array
+          items: { $ref: "#/components/schemas/ImpactPoint" }
+    Plan:
+      type: object
+      required: [id, name, interval, price, charity_default, savings]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        interval: { type: string }
+        price: { type: number }
+        charity_default: { type: integer }
+        savings: { type: string }
+    ImpactPoint:
+      type: object
+      required: [label, value]
+      properties:
+        label: { type: string }
+        value: { type: number }
+    Score:
+      type: object
+      required: [id, score, score_date, percentile, label]
+      properties:
+        id: { type: string }
+        score: { type: integer }
+        score_date: { type: string }
+        percentile: { type: integer }
+        label: { type: string }
+    ScoreInput:
+      type: object
+      required: [score, score_date]
+      properties:
+        score: { type: integer, minimum: 1, maximum: 45 }
+        score_date: { type: string, format: date }
+    CharityPreference:
+      type: object
+      required: [charity, contribution_percentage]
+      properties:
+        charity: { $ref: "#/components/schemas/Charity" }
+        contribution_percentage: { type: integer, minimum: 10, maximum: 100 }
+    CharityPreferenceInput:
+      type: object
+      required: [charity_id, contribution_percentage]
+      properties:
+        charity_id: { type: string }
+        contribution_percentage: { type: integer, minimum: 10, maximum: 100 }
+    DrawSummary:
+      type: object
+      required: [id, label, status, draw_date, jackpot, entry_count]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        status: { type: string }
+        draw_date: { type: string }
+        jackpot: { type: number }
+        entry_count: { type: integer }
+        numbers:
+          type: array
+          items: { type: integer }
+    Winner:
+      type: object
+      required: [id, draw_label, match_type, prize_amount, verification_status, payout_status]
+      properties:
+        id: { type: string }
+        draw_label: { type: string }
+        match_type: { type: string }
+        prize_amount: { type: number }
+        verification_status: { type: string }
+        payout_status: { type: string }
+        proof_url: { type: ["string", "null"] }
+        matched_numbers:
+          type: array
+          items: { type: integer }
+    ProofInput:
+      type: object
+      required: [file_name]
+      properties:
+        file_name: { type: string }
+        file_type: { type: string }
+    SubscriberDashboard:
+      type: object
+      required: [profile, subscription, score_summary, charity_preference, draws, winners]
+      properties:
+        profile: { $ref: "#/components/schemas/Profile" }
+        subscription: { $ref: "#/components/schemas/Subscription" }
+        score_summary: { $ref: "#/components/schemas/ScoreSummary" }
+        charity_preference: { $ref: "#/components/schemas/CharityPreference" }
+        draws:
+          type: array
+          items: { $ref: "#/components/schemas/DrawSummary" }
+        winners:
+          type: array
+          items: { $ref: "#/components/schemas/Winner" }
+    Profile:
+      type: object
+      required: [id, full_name, email, role]
+      properties:
+        id: { type: string }
+        full_name: { type: string }
+        email: { type: string }
+        role: { type: string }
+    ScoreSummary:
+      type: object
+      required: [average, best, trend, scores]
+      properties:
+        average: { type: number }
+        best: { type: integer }
+        trend: { type: string }
+        scores:
+          type: array
+          items: { $ref: "#/components/schemas/Score" }
+    AdminOverview:
+      type: object
+      required: [total_users, active_subscribers, monthly_revenue, prize_pool, charity_total, winners, pending_verification, revenue_series]
+      properties:
+        total_users: { type: integer }
+        active_subscribers: { type: integer }
+        monthly_revenue: { type: number }
+        prize_pool: { type: number }
+        charity_total: { type: number }
+        winners: { type: integer }
+        pending_verification: { type: integer }
+        revenue_series:
+          type: array
+          items: { $ref: "#/components/schemas/ImpactPoint" }
+    AdminUser:
+      type: object
+      required: [id, name, email, plan, status, joined, scores]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        plan: { type: string }
+        status: { type: string }
+        joined: { type: string }
+        scores: { type: integer }
+    AdminDraw:
+      allOf:
+        - $ref: "#/components/schemas/DrawSummary"
+        - type: object
+          required: [draw_type, distributed, rollover, status]
+          properties:
+            draw_type: { type: string }
+            distributed: { type: number }
+            rollover: { type: number }
+            status: { type: string }
+    DrawSimulationInput:
+      type: object
+      required: [draw_type, prize_contribution, seed]
+      properties:
+        draw_type: { type: string, enum: [random, algorithmic] }
+        prize_contribution: { type: number, minimum: 0 }
+        seed: { type: string, minLength: 1 }
+    SimulationResult:
+      type: object
+      required: [generated_numbers, participant_count, winners, allocation, rollover, total_distributed]
+      properties:
+        generated_numbers:
+          type: array
+          items: { type: integer }
+        participant_count: { type: integer }
+        winners:
+          type: array
+          items: { $ref: "#/components/schemas/Winner" }
+        allocation:
+          type: array
+          items: { $ref: "#/components/schemas/PrizeAllocation" }
+        rollover: { type: number }
+        total_distributed: { type: number }
+    PrizeAllocation:
+      type: object
+      required: [match_type, percentage, pool, winners, per_winner]
+      properties:
+        match_type: { type: string }
+        percentage: { type: integer }
+        pool: { type: number }
+        winners: { type: integer }
+        per_winner: { type: number }
+    CharityInput:
+      type: object
+      required: [name, slug, short_description, full_description, focus]
+      properties:
+        name: { type: string }
+        slug: { type: string }
+        short_description: { type: string }
+        full_description: { type: string }
+        focus: { type: string }
+        featured: { type: boolean }
+    AdminWinner:
+      allOf:
+        - $ref: "#/components/schemas/Winner"
+        - type: object
+          required: [user_name, user_email]
+          properties:
+            user_name: { type: string }
+            user_email: { type: string }
+            proof_url: { type: ["string", "null"] }
+    VerificationInput:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [approved, rejected] }
+        note: { type: string }
+
