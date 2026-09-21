@@ -28,6 +28,9 @@ if (!basePath) {
 }
 
 export default defineConfig({
+  preview: {
+    allowedHosts: true
+  },
   base: basePath,
   plugins: [
     react(),
