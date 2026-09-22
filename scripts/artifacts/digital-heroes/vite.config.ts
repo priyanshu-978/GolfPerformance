@@ -28,13 +28,6 @@ if (!basePath) {
 }
 
 export default defineConfig({
-  server: {
-    allowedHosts: [
-      'golfperformance-1.onrender.com'
-      ]},
-  preview: {
-    allowedHosts: true
-  },
   base: basePath,
   plugins: [
     react(),
@@ -83,6 +76,6 @@ export default defineConfig({
   preview: {
     port,
     host: '0.0.0.0',
-    allowedHosts: true,
+    allowedHosts: true, 
   },
 });
